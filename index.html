@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Petualangan Penjaga Bumi - Edukasi IPA Interaktif</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap');
+    body {
+      font-family: 'Fredoka', sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .animate-wiggle {
+      animation: wiggle 2s infinite;
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg); }
+      50% { transform: rotate(3deg); }
+    }
+    /* Custom scrollbar for friendly look */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #86efac;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4ade80;
+    }
+  </style>
+</head>
+<body id="app-body" class="min-h-screen flex flex-col bg-gradient-to-b from-sky-100 via-green-50 to-amber-50 text-slate-800 select-none relative overflow-x-hidden pb-12 transition-all">
+
+  <!-- --- CONFETTI CANVAS --- -->
+  <canvas id="confetti-canvas" class="fixed inset-0 z-50 pointer-events-none w-full h-full hidden"></canvas>
+
+  <!-- --- NAVBAR & STATUS BAR --- -->
+  <nav id="navbar" class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-md px-4 py-3 flex items-center justify-between border-b-4 border-green-500 max-w-7xl mx-auto w-full rounded-b-2xl transition-all">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl animate-bounce">🌎</span>
+      <div>
+        <h1 class="font-extrabold text-green-700 dark:text-green-400 text-lg sm:text-xl tracking-tight leading-none">PENJAGA BUMI</h1>
+        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Misi Pelestarian Ekosistem</span>
+      </div>
+    </div>
+
+    <!-- User Stats & Core Controls -->
+    <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+      <div id="level-badge" class="flex items-center bg-amber-100 dark:bg-amber-900/50 border-2 border-amber-400 px-3 py-1 rounded-full font-bold text-amber-800 dark:text-amber-300 shadow-sm">
+        ⭐ Lvl 1
+      </div>
+      <div class="flex flex-col items-end">
+        <span id="xp-text" class="font-extrabold text-blue-700 dark:text-blue-400">0 XP</span>
+        <div class="w-16 sm:w-28 bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+          <div id="xp-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex items-center gap-1">
+        <button id="btn-theme" onclick="toggleTheme()" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 transition" title="Ubah Tema">
+          🌙
+        </button>
+        <button id="btn-sound" onclick="toggleSound()" class="p-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-2 border-green-400 transition" title="Suara">
+          🔊
+        </button>
+        <button id="btn-fullscreen" onclick="toggleFullscreen()" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-sm" title="Layar Penuh">
+          🗖
+        </button>
+        <button onclick="openExitModal()" class="p-2 rounded-full bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 border-2 border-red-300 dark:border-red-900 font-bold text-xs" title="Keluar">
+          ❌
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- --- LEARNING PROGRESS BAR --- -->
+  <div class="max-w-4xl mx-auto w-full px-4 mt-4">
+    <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur rounded-2xl p-2.5 border-2 border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between text-xs sm:text-sm">
+      <span class="font-bold text-slate-600 dark:text-slate-400">Kemajuan Belajar:</span>
+      <div id="progress-map-container" class="flex-1 mx-3 grid grid-cols-9 gap-1 sm:gap-2">
+        <!-- Generated dynamically via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- --- MAIN SCREEN CONTAINER (SPA ROUTER) --- -->
+  <main class="flex-1 max-w-5xl mx-auto w-full px-4 mt-6 flex flex-col justify-center">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border-4 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 sm:p-10 transition-all duration-300">
+      
+      <!-- PAGE 1: HERO LANDING PAGE & PROFILE -->
+      <div id="page-beranda" class="page-view text-center py-4 space-y-8">
+        <div class="relative h-16 w-full overflow-hidden">
+          <span class="absolute left-10 text-4xl animate-bounce duration-1000">☁️</span>
+          <span class="absolute right-20 text-5xl animate-bounce duration-700">☁️</span>
+          <span class="absolute left-1/2 -translate-x-1/2 text-3xl animate-pulse">🦅</span>
+        </div>
+
+        <div class="space-y-3">
+          <div class="inline-block bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300 font-extrabold px-6 py-2 rounded-full text-sm uppercase tracking-wider border-2 border-green-300 shadow-sm">
+            E-Learning IPA SD • Lingkungan & Ekosistem
+          </div>
+          <h1 class="text-4xl sm:text-6xl font-black text-green-700 dark:text-green-400 tracking-tight leading-none">
+            🌎 PETUALANGAN <br>PENJAGA BUMI
+          </h1>
+          <p class="text-slate-600 dark:text-slate-300 text-lg sm:text-xl font-medium max-w-2xl mx-auto">
+            "Mari menjelajahi alam dan memahami hubungan makhluk hidup dengan lingkungannya!"
+          </p>
+        </div>
+
+        <!-- PROFILE CARD (DEVELOPER) -->
+        <div class="max-w-md mx-auto bg-gradient-to-br from-green-50 to-emerald-100 dark:from-slate-800 dark:to-slate-800/80 p-5 rounded-3xl border-2 border-green-300 dark:border-green-800 shadow-md flex items-center gap-4 text-left">
+          <div class="w-16 h-16 bg-green-200 dark:bg-green-900 rounded-2xl flex items-center justify-center text-3xl shadow-inner shrink-0">
+            👩‍🎓
+          </div>
+          <div>
+            <span class="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-widest block">DIKEMBANGKAN OLEH</span>
+            <h4 class="font-black text-slate-800 dark:text-white text-lg">Mawaddatul Wahida</h4>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">NIM: E1E02410135</p>
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">PGSD Universitas Mataram (UNRAM)</p>
+          </div>
+        </div>
+
+        <!-- 8 INTERACTIVE MENU DASHBOARD -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <button onclick="navigateTo('materi-singkat')" class="bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-2xl border-b-4 border-emerald-700 active:border-b-0 font-extrabold transition hover:scale-105 flex flex-col items-center justify-center gap-2 shadow">
+            <span class="text-3xl">📖</span>
+            <span class="text-xs sm:text-sm">Mulai Belajar</span>
+          </button>
+          <button onclick="navigateTo('map')" class="bg-sky-500 hover:bg-sky-600 text-white p-4 rounded-2xl border-b-4 border-sky-700 active:border-b-0 font-extrabold transition hover:scale-105 flex flex-col items-center justify-center gap-2 shadow">
+            <span class="text-3xl">🗺️</span>
+            <span class="text-xs sm:text-sm">Peta Misi</span>
+          </button>
+          <button onclick="navigateTo('lab')" class="bg-indigo-500 hover:bg-indigo-600 text-white p-4 rounded-2xl border-b-4 border-indigo-700 active:border-b-0 font-extrabold transition hover:scale-105 flex flex-col items-center justify-center gap-2 shadow">
+            <span class="text-3xl">🧪</span>
+            <span class="text-xs sm:text-sm">Laboratorium</span>
+          </button>
+          <button onclick="navigateTo('game')" class="bg-violet-500 hover:bg-violet-600 text-white p-4 rounded-2xl border-b-4 border-violet-700 active:border-b-0 font-extrabold transition hover:scale-105 flex flex-col items-center justify-center gap-2 shadow">
+            <span class="text-3xl">🎮</span>
+            <span class="text-xs sm:text-sm">Game Edukasi</span>
+          </button>
+          <button onclick="navigateTo('tantangan')" class="bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-2xl border-b-4 border-amber-700 active:border-b-0 font-extrabold transition hover:scale-105 flex flex-col items-center justify-center gap-2 shadow">
+            <span class="text-3xl">🏆</span>
+            <span class="text-xs sm:text-sm">Tantangan Kuis</span>
+          </button>
+          <button onclick="showProgressDashboard()" class="bg-teal-500 hover:bg-teal-600 text-white p-4 rounded-2xl border-b-4 border-teal-700 active:border-b-0 font-extrabold transition hover:scale-105 flex flex-col items-center justify-center gap-2 shadow">
+            <span class="text-3xl">📊</span>
+            <span class="text-xs sm:text-sm">Progress</span>
+          </button>
+          <button onclick="showDeveloperModal()" class="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-2xl border-b-4 border-orange-700 active:border-b-0 font-extrabold transition hover:scale-105 flex flex-col items-center justify-center gap-2 shadow">
+            <span class="text-3xl">ℹ️</span>
+            <span class="text-xs sm:text-sm">Tentang Kami</span>
+          </button>
+          <button onclick="openExitModal()" class="bg-rose-500 hover:bg-rose-600 text-white p-4 rounded-2xl border-b-4 border-rose-700 active:border-b-0 font-extrabold transition hover:scale-105 flex flex-col items-center justify-center gap-2 shadow">
+            <span class="text-3xl">❌</span>
+            <span class="text-xs sm:text-sm">Keluar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE: MATERI SINGKAT -->
+      <div id="page-materi-singkat" class="page-view hidden py-4 space-y-8">
+        <div class="text-center">
+          <span class="text-5xl">📖</span>
+          <h2 class="text-3xl font-black text-slate-800 dark:text-white mt-2">Apa Itu Lingkungan?</h2>
+          <p class="text-slate-500 dark:text-slate-400">Pengenalan Dasar Ekosistem & Kehidupan Alam</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-green-50 dark:bg-slate-800 p-6 rounded-3xl border-2 border-green-300 dark:border-green-800 space-y-4">
+            <h3 class="text-xl font-black text-green-800 dark:text-green-400">Segala Sesuatu di Sekitar Kita</h3>
+            <p class="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              Lingkungan adalah segala sesuatu yang berada di sekitar makhluk hidup dan memengaruhi kehidupannya. Lingkungan terbagi menjadi dua kelompok komponen penting:
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-white dark:bg-slate-700 p-3 rounded-2xl border border-green-200 dark:border-slate-600 text-center">
+                <span class="text-3xl block">🌱</span>
+                <span class="font-extrabold text-sm text-green-700 dark:text-green-300">Biotik</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">Makhluk Hidup</span>
+              </div>
+              <div class="bg-white dark:bg-slate-700 p-3 rounded-2xl border border-green-200 dark:border-slate-600 text-center">
+                <span class="text-3xl block">☀️</span>
+                <span class="font-extrabold text-sm text-amber-700 dark:text-amber-300">Abiotik</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">Benda Mati</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 dark:bg-slate-800 p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+            <div class="space-y-4">
+              <h4 class="font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                <span>🔊 Narator Otomatis</span>
+              </h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Klik tombol untuk menyuarakan materi pelajaran ini:</p>
+              <button onclick="playTTS('Lingkungan adalah segala sesuatu yang berada di sekitar makhluk hidup dan memengaruhi kehidupannya.')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-extrabold py-3 px-6 rounded-xl border-b-4 border-blue-700 active:border-b-0 flex items-center justify-center gap-2">
+                🔊 Putar Narasi Suara
+              </button>
+            </div>
+
+            <div class="mt-4 p-4 bg-amber-100 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-900 rounded-2xl">
+              <span class="font-black text-amber-800 dark:text-amber-400 text-sm block">💡 Fakta Menarik:</span>
+              <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">Satu pohon dewasa menghasilkan oksigen yang cukup untuk empat orang bernapas dalam sehari!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-4 max-w-md mx-auto">
+          <button onclick="navigateTo('beranda')" class="flex-1 bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-slate-600 active:border-b-0">
+            ⬅️ Beranda
+          </button>
+          <button onclick="navigateTo('cp')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-green-700 active:border-b-0">
+            Mulai Petualangan 🚀
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 2: CAPAIAN PEMBELAJARAN (CP) -->
+      <div id="page-cp" class="page-view hidden py-4">
+        <div class="text-center mb-8">
+          <span class="text-5xl">🎯</span>
+          <h2 class="text-3xl font-black text-slate-800 dark:text-white mt-2">Misi Besar Penjaga Bumi</h2>
+          <p class="text-slate-500 dark:text-slate-400">Capaian Pembelajaran Kurikulum Merdeka Terkini</p>
+        </div>
+        <div class="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-slate-800 dark:to-slate-800/80 border-4 border-green-400 rounded-3xl p-6 sm:p-10 max-w-3xl mx-auto shadow-lg relative overflow-hidden mb-8">
+          <h3 class="text-lg font-black text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
+            📖 <span>CAPAIAN PEMBELAJARAN (CP):</span>
+          </h3>
+          <p class="text-slate-700 dark:text-slate-300 text-lg sm:text-xl font-semibold leading-relaxed mb-6 bg-white/70 dark:bg-slate-900/75 p-6 rounded-2xl border-2 border-green-200 dark:border-slate-700">
+            "Peserta didik mampu memahami hubungan antara makhluk hidup dan lingkungannya serta menunjukkan sikap peduli terhadap kelestarian alam."
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-slate-700 p-4 rounded-2xl border-2 border-green-200 dark:border-slate-600 text-center flex flex-col items-center">
+              <span class="text-4xl mb-2 animate-bounce">🌱</span>
+              <span class="font-extrabold text-sm text-green-700 dark:text-green-300">Menanam Pohon</span>
+            </div>
+            <div class="bg-white dark:bg-slate-700 p-4 rounded-2xl border-2 border-green-200 dark:border-slate-600 text-center flex flex-col items-center">
+              <span class="text-4xl mb-2 animate-bounce-slow">🌊</span>
+              <span class="font-extrabold text-sm text-blue-700 dark:text-blue-300">Sungai Bersih</span>
+            </div>
+            <div class="bg-white dark:bg-slate-700 p-4 rounded-2xl border-2 border-green-200 dark:border-slate-600 text-center flex flex-col items-center">
+              <span class="text-4xl mb-2 animate-bounce">🦋</span>
+              <span class="font-extrabold text-sm text-amber-700 dark:text-amber-300">Harmoni Alami</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-4 max-w-md mx-auto">
+          <button onclick="navigateTo('materi-singkat')" class="flex-1 bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-slate-600 active:border-b-0">
+            ⬅️ Kembali
+          </button>
+          <button onclick="addXp(10); navigateTo('tp')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-green-700 active:border-b-0">
+            Lanjut ➡️
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 3: TUJUAN PEMBELAJARAN (TP) -->
+      <div id="page-tp" class="page-view hidden py-4">
+        <div class="text-center mb-6">
+          <span class="text-5xl">📋</span>
+          <h2 class="text-3xl font-black text-slate-800 dark:text-white mt-2">Target Misi Hari Ini</h2>
+          <p class="text-slate-500 dark:text-slate-400">Centang target misi di bawah ini untuk melihat progres belajarmu!</p>
+        </div>
+        <!-- Progress Tracker -->
+        <div class="max-w-2xl mx-auto mb-8 bg-sky-50 dark:bg-slate-800 border-2 border-sky-300 dark:border-slate-700 p-4 rounded-2xl">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-extrabold text-sky-800 dark:text-sky-300">Progres Capaian Tujuan Pembelajaran:</span>
+            <span id="tp-percentage" class="font-black text-sky-900 dark:text-white">0% Misi Selesai</span>
+          </div>
+          <div class="w-full bg-slate-200 dark:bg-slate-700 h-4 rounded-full overflow-hidden">
+            <div id="tp-progress-bar" class="bg-sky-500 h-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+        <!-- TP Checklist -->
+        <div id="tp-list-container" class="max-w-2xl mx-auto space-y-3 mb-8">
+          <!-- Filled dynamically via JS -->
+        </div>
+        <div class="flex gap-4 max-w-md mx-auto">
+          <button onclick="navigateTo('cp')" class="flex-1 bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-slate-600 active:border-b-0">
+            ⬅️ Kembali
+          </button>
+          <button onclick="navigateTo('map')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-green-700 active:border-b-0">
+            Lanjut ➡️
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 4: PETA PETUALANGAN -->
+      <div id="page-map" class="page-view hidden py-4">
+        <div class="text-center mb-6">
+          <span class="text-5xl">🗺️</span>
+          <h2 class="text-3xl font-black text-slate-800 dark:text-white mt-2">Peta Dunia Ekosistem</h2>
+          <p class="text-slate-500 dark:text-slate-400">Klik area pada peta untuk membuka materi pembelajaran interaktif!</p>
+        </div>
+        <!-- Map Board -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8" id="map-zones-grid">
+          <!-- Filled dynamically via JS -->
+        </div>
+        <div class="bg-sky-50 dark:bg-slate-800 rounded-2xl p-4 border border-dashed border-sky-300 dark:border-slate-700 text-center mb-8">
+          <span class="text-xs font-bold text-sky-700 dark:text-sky-300 tracking-widest uppercase">Petunjuk Jalan:</span>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Selesaikan kelima zona pembelajaran secara berurutan untuk memaksimalkan pemahaman IPA Anda!</p>
+        </div>
+        <div class="flex gap-4 max-w-md mx-auto">
+          <button onclick="navigateTo('tp')" class="flex-1 bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-slate-600 active:border-b-0">
+            ⬅️ Kembali
+          </button>
+          <button onclick="navigateTo('lab')" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-indigo-700 active:border-b-0">
+            Lanjut ke Lab 🧪
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 5: MATERI INTERAKTIF (ZONES) -->
+      <div id="page-materi" class="page-view hidden py-2">
+        <div class="flex flex-wrap gap-2 mb-6 justify-center bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl" id="materi-tab-selector">
+          <!-- Filled dynamically via JS -->
+        </div>
+        <div id="materi-content-area" class="min-h-[250px] transition-all">
+          <!-- Swapped dynamically in JS -->
+        </div>
+        <div class="mt-8 flex gap-4 max-w-md mx-auto">
+          <button onclick="navigateTo('map')" class="flex-1 bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-slate-600 active:border-b-0">
+            ⬅️ Peta
+          </button>
+          <button onclick="navigateTo('lab')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-green-700 active:border-b-0">
+            Lanjut ke Lab 🧪
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 6: LABORATORIUM EKSPLORASI -->
+      <div id="page-lab" class="page-view hidden py-2">
+        <div class="text-center mb-6">
+          <span class="text-5xl">🧪</span>
+          <h2 class="text-3xl font-black text-slate-800 dark:text-white mt-2">Laboratorium Eksplorasi</h2>
+          <p class="text-slate-500 dark:text-slate-400">Lakukan eksperimen interaktif untuk membuktikan kepintaranmu!</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <!-- Eksperimen 1: Klasifikasi drag and drop -->
+          <div class="bg-slate-50 dark:bg-slate-800 rounded-3xl border-2 border-slate-200 dark:border-slate-700 p-6 flex flex-col justify-between min-h-[350px]">
+            <div>
+              <h3 class="font-extrabold text-lg text-slate-800 dark:text-white mb-2">🔬 Eksperimen 1: Klasifikasi</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Seret atau ketuk objek untuk memisahkannya:</p>
+              
+              <div id="exp1-playground" class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 text-center shadow-inner">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Eksperimen 2: Bangun Ekosistem -->
+          <div class="bg-slate-50 dark:bg-slate-800 rounded-3xl border-2 border-slate-200 dark:border-slate-700 p-6 flex flex-col justify-between min-h-[350px]">
+            <div>
+              <h3 class="font-extrabold text-lg text-slate-800 dark:text-white mb-2">🪐 Eksperimen 2: Bangun Ekosistem Seimbang</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Tambahkan elemen di bawah agar lingkungan hidup ini seimbang:</p>
+              
+              <div id="ecosystem-canvas" class="bg-sky-200 dark:bg-sky-950/40 rounded-2xl p-4 min-h-[160px] border border-sky-300 dark:border-sky-900 relative flex flex-wrap justify-center items-center gap-4 mb-4 shadow-inner">
+                <!-- Dynamically Placed Elements -->
+              </div>
+              <div id="ecosystem-elements-selector" class="flex flex-wrap gap-2 justify-center">
+                <!-- Selectors generated dynamically -->
+              </div>
+            </div>
+            <div id="ecosystem-reset-container" class="mt-4 hidden">
+              <button onclick="resetEcosystem()" class="w-full bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-2 rounded-xl border-b-4 border-slate-600 active:border-b-0 text-xs">
+                🔄 Reset dan Bangun Lagi
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-4 max-w-md mx-auto">
+          <button onclick="navigateTo('map')" class="flex-1 bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-slate-600 active:border-b-0">
+            ⬅️ Kembali
+          </button>
+          <button onclick="navigateTo('tantangan')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-green-700 active:border-b-0">
+            Mulai Tantangan ➡️
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 7: TANTANGAN (QUIZ) -->
+      <div id="page-tantangan" class="page-view hidden py-2">
+        <div class="flex justify-between items-center bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl mb-6">
+          <span id="quiz-progress-text" class="font-extrabold text-slate-700 dark:text-slate-300">Soal 1 dari 10</span>
+          <div id="quiz-timer" class="px-4 py-1.5 rounded-full font-black text-xs bg-amber-400 text-slate-900">
+            ⏱️ 15 Detik
+          </div>
+        </div>
+
+        <h3 id="quiz-question" class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mb-6">
+          Loading Question...
+        </h3>
+
+        <div id="quiz-options-container" class="grid grid-cols-1 gap-3 mb-6">
+          <!-- Option buttons -->
+        </div>
+
+        <div id="quiz-explanation-box" class="bg-sky-50 dark:bg-slate-800 border-2 border-sky-200 dark:border-slate-700 rounded-2xl p-4 mb-6 hidden">
+          <span class="font-extrabold text-sky-900 dark:text-sky-300 block mb-1">📖 Penjelasan Singkat:</span>
+          <p id="quiz-explanation-text" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium"></p>
+        </div>
+
+        <button id="quiz-btn-next" onclick="nextQuizQuestion()" class="w-full bg-green-500 hover:bg-green-600 text-white font-extrabold py-3.5 rounded-2xl border-b-4 border-green-700 active:border-b-0 text-center text-lg transition hidden">
+          Soal Berikutnya ➡️
+        </button>
+      </div>
+
+      <!-- PAGE 8: GAME EDUKASI -->
+      <div id="page-game" class="page-view hidden py-2">
+        <div class="flex flex-wrap gap-2 mb-6 justify-center bg-indigo-50 dark:bg-slate-800 p-2 rounded-2xl border-2 border-indigo-100 dark:border-slate-700">
+          <button onclick="switchGame(1)" id="tab-game1" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-indigo-500 text-white shadow-md">
+            ♻️ Pilah Sampah
+          </button>
+          <button onclick="switchGame(2)" id="tab-game2" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300">
+            🌳 Selamatkan Hutan
+          </button>
+          <button onclick="switchGame(3)" id="tab-game3" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-300">
+            🦋 Cari Makhluk Hidup
+          </button>
+        </div>
+
+        <div id="game-playground-container">
+          <!-- Game screens swapped via JS -->
+        </div>
+
+        <div class="mt-8 flex gap-4 max-w-md mx-auto">
+          <button onclick="navigateTo('tantangan')" class="flex-1 bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-slate-600 active:border-b-0">
+            ⬅️ Kembali
+          </button>
+          <button onclick="navigateTo('penutup')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 px-6 rounded-2xl border-b-4 border-green-700 active:border-b-0">
+            Selesai 🏁
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 9: PENUTUP / FINAL RESULT -->
+      <div id="page-penutup" class="page-view hidden text-center py-4 space-y-6">
+        <span class="text-7xl animate-bounce block">🎉</span>
+        <h2 class="text-3xl sm:text-5xl font-black text-slate-800 dark:text-white leading-none">SELAMAT PETUALANG!</h2>
+        <p class="text-slate-500 dark:text-slate-400 text-base sm:text-lg font-bold">"Kamu telah berhasil menyelesaikan seluruh rangkaian Petualangan Penjaga Bumi."</p>
+
+        <div class="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-800/60 p-6 sm:p-8 rounded-3xl border-2 border-slate-200 dark:border-slate-700 max-w-2xl mx-auto shadow-inner space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-center">
+              <span class="text-[10px] font-bold text-slate-400 block uppercase">Akurasi Kuis</span>
+              <span id="final-accuracy" class="text-3xl font-black text-indigo-600 dark:text-indigo-400 block">0%</span>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-center">
+              <span class="text-[10px] font-bold text-slate-400 block uppercase">Total Skor XP</span>
+              <span id="final-xp" class="text-3xl font-black text-green-600 dark:text-green-400 block font-sans">0 XP</span>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-center">
+              <span class="text-[10px] font-bold text-slate-400 block uppercase">Lencana</span>
+              <span id="final-badges-count" class="text-3xl font-black text-amber-500 block">0 Badge</span>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-xs font-black text-slate-500 block mb-2 uppercase">Lencana yang Diraih:</span>
+            <div id="final-badges-container" class="flex flex-wrap gap-2 justify-center"></div>
+          </div>
+
+          <div id="final-category-card" class="p-6 rounded-2xl border-2 text-center">
+            <!-- Rendered in JS dynamically -->
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+          <button onclick="resetAllProgress()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3.5 px-6 rounded-2xl border-b-4 border-amber-700 active:border-b-0 hover:scale-102 transition shadow-md">
+            🔄 Ulangi
+          </button>
+          <button onclick="navigateTo('beranda')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3.5 px-6 rounded-2xl border-b-4 border-green-700 active:border-b-0 hover:scale-102 transition shadow-md">
+            🏠 Menu Utama
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- --- POPUP EXIT --- -->
+  <div id="exit-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full border-4 border-red-500 shadow-2xl text-center">
+      <span class="text-6xl animate-bounce block mb-4">😰</span>
+      <h3 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mb-2">Mau Keluar Sekarang?</h3>
+      <p class="text-slate-600 dark:text-slate-400 mb-6 text-sm">Semua kemajuan dan XP petualanganmu yang belum tersimpan mungkin akan hilang.</p>
+      <div class="flex gap-4">
+        <button onclick="confirmExit()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-extrabold py-3 rounded-2xl border-b-4 border-red-700 active:border-b-0">
+          Ya, Keluar
+        </button>
+        <button onclick="closeExitModal()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 rounded-2xl border-b-4 border-green-700 active:border-b-0">
+          Tidak, Lanjut
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- --- MODAL DEVELOPER --- -->
+  <div id="developer-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full border-4 border-green-500 shadow-2xl space-y-4">
+      <div class="text-center">
+        <span class="text-6xl">👩‍🎓</span>
+        <h3 class="text-2xl font-black text-slate-800 dark:text-white mt-2">Tentang Pengembang</h3>
+      </div>
+      <div class="space-y-2 border-t border-b border-slate-100 dark:border-slate-700 py-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+        <p><strong class="text-slate-800 dark:text-white">Nama:</strong> Mawaddatul Wahida</p>
+        <p><strong class="text-slate-800 dark:text-white">NIM:</strong> E1E02410135</p>
+        <p><strong class="text-slate-800 dark:text-white">Program Studi:</strong> Pendidikan Guru Sekolah Dasar (PGSD)</p>
+        <p><strong class="text-slate-800 dark:text-white">Instansi:</strong> Universitas Mataram (UNRAM)</p>
+      </div>
+      <button onclick="closeDeveloperModal()" class="w-full bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 rounded-2xl border-b-4 border-green-700 active:border-b-0">
+        Tutup
+      </button>
+    </div>
+  </div>
+
+  <!-- --- MODAL PROGRESS BELAJAR --- -->
+  <div id="progress-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full border-4 border-blue-500 shadow-2xl space-y-4">
+      <div class="text-center">
+        <span class="text-6xl">📊</span>
+        <h3 class="text-2xl font-black text-slate-800 dark:text-white mt-2">Progress Belajarmu</h3>
+      </div>
+      <div class="space-y-3 font-semibold text-slate-700 dark:text-slate-300 text-sm">
+        <div class="flex justify-between">
+          <span>Level Tercapai:</span>
+          <span id="prog-level" class="text-blue-600">Lvl 1</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Total Skor XP:</span>
+          <span id="prog-xp" class="text-green-600">0 XP</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Lencana yang diraih:</span>
+          <span id="prog-badges" class="text-amber-600">0 Lencana</span>
+        </div>
+      </div>
+      <button onclick="closeProgressDashboard()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-extrabold py-3 rounded-2xl border-b-4 border-blue-700 active:border-b-0">
+        Tutup Progress
+      </button>
+    </div>
+  </div>
+
+  <!-- --- SCRIPT ENGINE --- -->
+  <script>
+    // --- APP STATE ---
+    let state = {
+      currentPage: 'beranda',
+      xp: 0,
+      level: 1,
+      unlockedBadges: [],
+      tpChecked: [false, false, false, false, false],
+      soundEnabled: true,
+      fullscreen: false,
+      theme: 'light'
+    };
+
+    // --- SOUND EFFECTS (Web Audio API) ---
+    function playSound(type) {
+      if (!state.soundEnabled) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        if (type === 'click') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } else if (type === 'correct') {
+          const playTone = (freq, delay, duration) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + duration);
+          };
+          playTone(523.25, 0, 0.15); // C5
+          playTone(659.25, 0.08, 0.15); // E5
+          playTone(783.99, 0.16, 0.3); // G5
+        } else if (type === 'wrong') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(110, ctx.currentTime + 0.4);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        } else if (type === 'victory') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+            gain.gain.setValueAtTime(0.12, ctx.currentTime + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.12);
+            osc.stop(ctx.currentTime + idx * 0.12 + 0.4);
+          });
+        }
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      loadProgress();
+      renderStatusBar();
+      renderProgressMap();
+      navigateTo(state.currentPage);
+      applyTheme();
+    };
+
+    function saveProgress() {
+      localStorage.setItem('penjaga_bumi_progress_v2', JSON.stringify(state));
+    }
+
+    function loadProgress() {
+      const saved = localStorage.getItem('penjaga_bumi_progress_v2');
+      if (saved) {
+        try {
+          state = JSON.parse(saved);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    function addXp(amount) {
+      state.xp += amount;
+      const calculatedLevel = Math.floor(state.xp / 100) + 1;
+      if (calculatedLevel > state.level) {
+        state.level = calculatedLevel;
+        playSound('victory');
+        addBadge('🏆 Penjelajah Level ' + calculatedLevel);
+      }
+      saveProgress();
+      renderStatusBar();
+    }
+
+    function addBadge(badgeName) {
+      if (!state.unlockedBadges.includes(badgeName)) {
+        state.unlockedBadges.push(badgeName);
+        saveProgress();
+      }
+    }
+
+    function resetAllProgress() {
+      localStorage.removeItem('penjaga_bumi_progress_v2');
+      state = {
+        currentPage: 'beranda',
+        xp: 0,
+        level: 1,
+        unlockedBadges: [],
+        tpChecked: [false, false, false, false, false],
+        soundEnabled: true,
+        fullscreen: false,
+        theme: 'light'
+      };
+      saveProgress();
+      renderStatusBar();
+      renderProgressMap();
+      navigateTo('beranda');
+    }
+
+    // --- DARK & LIGHT MODE ---
+    function toggleTheme() {
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
+      saveProgress();
+      applyTheme();
+      playSound('click');
+    }
+
+    function applyTheme() {
+      const body = document.getElementById('app-body');
+      const nav = document.getElementById('navbar');
+      const themeBtn = document.getElementById('btn-theme');
+
+      if (state.theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        body.classList.remove('from-sky-100', 'via-green-50', 'to-amber-50', 'text-slate-800');
+        body.classList.add('bg-slate-950', 'text-slate-100');
+        themeBtn.innerText = '☀️';
+      } else {
+        document.documentElement.classList.remove('dark');
+        body.classList.add('from-sky-100', 'via-green-50', 'to-amber-50', 'text-slate-800');
+        body.classList.remove('bg-slate-950', 'text-slate-100');
+        themeBtn.innerText = '🌙';
+      }
+    }
+
+    // --- SOUND & FULLSCREEN CONTROLS ---
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      const btn = document.getElementById('btn-sound');
+      if (state.soundEnabled) {
+        btn.classList.remove('bg-slate-100', 'text-slate-400', 'border-slate-300');
+        btn.classList.add('bg-green-100', 'text-green-700', 'border-green-400');
+        btn.innerText = '🔊';
+        playSound('click');
+      } else {
+        btn.classList.remove('bg-green-100', 'text-green-700', 'border-green-400');
+        btn.classList.add('bg-slate-100', 'text-slate-400', 'border-slate-300');
+        btn.innerText = '🔇';
+      }
+      saveProgress();
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        state.fullscreen = true;
+        document.getElementById('btn-fullscreen').innerText = '🗗';
+      } else {
+        document.exitFullscreen();
+        state.fullscreen = false;
+        document.getElementById('btn-fullscreen').innerText = '🗖';
+      }
+    }
+
+    // --- NAVIGATION ROUTER ---
+    const pagesList = ['beranda', 'materi-singkat', 'cp', 'tp', 'map', 'materi', 'lab', 'tantangan', 'game', 'penutup'];
+
+    function renderStatusBar() {
+      document.getElementById('level-badge').innerText = `⭐ Lvl ${state.level}`;
+      document.getElementById('xp-text').innerText = `${state.xp} XP`;
+      const percentage = state.xp % 100;
+      document.getElementById('xp-bar').style.width = `${percentage}%`;
+    }
+
+    function renderProgressMap() {
+      const container = document.getElementById('progress-map-container');
+      container.innerHTML = '';
+      pagesList.forEach((page, idx) => {
+        const currentIdx = pagesList.indexOf(state.currentPage);
+        let statusColor = "bg-slate-200 text-slate-400 border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500";
+        if (idx < currentIdx) {
+          statusColor = "bg-green-500 text-white border-green-600 shadow-sm";
+        } else if (idx === currentIdx) {
+          statusColor = "bg-amber-400 text-amber-900 border-amber-500 font-extrabold animate-bounce";
+        }
+        
+        container.innerHTML += `
+          <div class="h-6 sm:h-8 flex items-center justify-center rounded-lg border-b-2 text-[9px] sm:text-xs font-bold transition-all ${statusColor}">
+            ${idx + 1}
+          </div>
+        `;
+      });
+    }
+
+    function navigateTo(pageId) {
+      playSound('click');
+      state.currentPage = pageId;
+      saveProgress();
+      renderProgressMap();
+
+      document.querySelectorAll('.page-view').forEach(view => {
+        view.classList.add('hidden');
+      });
+
+      document.getElementById(`page-${pageId}`).classList.remove('hidden');
+
+      if (pageId === 'penutup') {
+        startConfetti();
+        renderPenutup();
+      } else {
+        stopConfetti();
+      }
+
+      if (pageId === 'tp') renderTP();
+      if (pageId === 'map') renderMap();
+      if (pageId === 'materi') renderMateri(1);
+      if (pageId === 'lab') initLab();
+      if (pageId === 'tantangan') initTantangan();
+      if (pageId === 'game') switchGame(1);
+    }
+
+    // --- DEVELOPER MODAL ---
+    function showDeveloperModal() {
+      playSound('click');
+      document.getElementById('developer-modal').classList.remove('hidden');
+    }
+
+    function closeDeveloperModal() {
+      playSound('click');
+      document.getElementById('developer-modal').classList.add('hidden');
+    }
+
+    // --- EXIT MODAL ---
+    function openExitModal() {
+      playSound('click');
+      document.getElementById('exit-modal').classList.remove('hidden');
+    }
+
+    function closeExitModal() {
+      playSound('click');
+      document.getElementById('exit-modal').classList.add('hidden');
+    }
+
+    function confirmExit() {
+      playSound('wrong');
+      document.getElementById('exit-modal').classList.add('hidden');
+      navigateTo('beranda');
+    }
+
+    // --- PROGRESS MODAL ---
+    function showProgressDashboard() {
+      playSound('click');
+      document.getElementById('prog-level').innerText = `Level ${state.level}`;
+      document.getElementById('prog-xp').innerText = `${state.xp} XP`;
+      document.getElementById('prog-badges').innerText = `${state.unlockedBadges.length} Lencana`;
+      document.getElementById('progress-modal').classList.remove('hidden');
+    }
+
+    function closeProgressDashboard() {
+      playSound('click');
+      document.getElementById('progress-modal').classList.add('hidden');
+    }
+
+    // ==========================================
+    // --- PAGE 3: TUJUAN PEMBELAJARAN (TP) ---
+    // ==========================================
+    const targetsData = [
+      { text: "Menjelaskan pengertian lingkungan hidup di sekitar kita.", xp: 10 },
+      { text: "Mengidentifikasi komponen biotik dan abiotik dengan tepat.", xp: 15 },
+      { text: "Menjelaskan hubungan timbal balik antara makhluk hidup dengan lingkungannya.", xp: 20 },
+      { text: "Memahami pentingnya menjaga keseimbangan ekosistem demi masa depan bumi.", xp: 15 },
+      { text: "Mengimplementasikan cara menjaga kelestarian alam dalam kehidupan sehari-hari.", xp: 25 }
+    ];
+
+    function renderTP() {
+      const container = document.getElementById('tp-list-container');
+      container.innerHTML = '';
+
+      let checkedCount = 0;
+      targetsData.forEach((target, idx) => {
+        const isChecked = state.tpChecked[idx];
+        if (isChecked) checkedCount++;
+
+        container.innerHTML += `
+          <div 
+            onclick="toggleTPCheck(${idx})"
+            class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-4 hover:scale-102 ${isChecked ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-400 shadow-inner' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm'}"
+          >
+            <div class="w-6 h-6 rounded-md border-2 flex items-center justify-center text-xs ${isChecked ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}">
+              ${isChecked ? '✓' : ''}
+            </div>
+            <div class="flex-1 text-left">
+              <p class="font-bold ${isChecked ? 'text-slate-500 dark:text-slate-400 line-through' : 'text-slate-800 dark:text-white'}">
+                ${target.text}
+              </p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-400 font-extrabold px-2 py-0.5 rounded text-[10px] sm:text-xs">
+                  +${target.xp} XP
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      const percent = Math.round((checkedCount / targetsData.length) * 100);
+      document.getElementById('tp-percentage').innerText = `${percent}% Misi Selesai`;
+      document.getElementById('tp-progress-bar').style.width = `${percent}%`;
+    }
+
+    function toggleTPCheck(idx) {
+      const originalValue = state.tpChecked[idx];
+      state.tpChecked[idx] = !state.tpChecked[idx];
+      if (!originalValue) {
+        playSound('correct');
+        addXp(targetsData[idx].xp);
+      } else {
+        playSound('click');
+      }
+      saveProgress();
+      renderTP();
+    }
+
+    // ==========================================
+    // --- PAGE 4: PETA PETUALANGAN ---
+    // ==========================================
+    const zonesData = [
+      { id: 1, name: "Mengenal Lingkungan", area: "🌳 Hutan Kehidupan", desc: "Dasar tentang lingkungan sekitarmu.", icon: "🌳", color: "from-green-400 to-emerald-500 border-emerald-600" },
+      { id: 2, name: "Komponen Biotik", area: "🌊 Sungai Ekosistem", desc: "Hewan, tumbuhan, dan makhluk hidup.", icon: "🐟", color: "from-blue-400 to-indigo-500 border-indigo-600" },
+      { id: 3, name: "Komponen Abiotik", area: "⛰️ Pegunungan Alam", desc: "Air, tanah, dan cahaya matahari.", icon: "☀️", color: "from-amber-400 to-orange-500 border-orange-600" },
+      { id: 4, name: "Hubungan Timbal Balik", area: "🌻 Padang Bunga", desc: "Interaksi timbal balik ekosistem.", icon: "🦋", color: "from-teal-400 to-cyan-500 border-cyan-600" },
+      { id: 5, name: "Menjaga Kelestarian", area: "🦋 Taman Satwa", desc: "Langkah nyata menjaga bumi asri.", icon: "🌱", color: "from-rose-400 to-red-500 border-red-600" }
+    ];
+
+    function renderMap() {
+      const grid = document.getElementById('map-zones-grid');
+      grid.innerHTML = '';
+      zonesData.forEach(z => {
+        grid.innerHTML += `
+          <div onclick="selectZone(${z.id})" class="group cursor-pointer hover:scale-105 transition-all duration-300 text-left">
+            <div class="bg-gradient-to-br ${z.color} text-white p-5 rounded-3xl border-b-8 shadow-lg h-full flex flex-col justify-between">
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-xs uppercase font-extrabold tracking-wider bg-white/20 px-2.5 py-1 rounded-full">Zona ${z.id}</span>
+                  <span class="text-2xl group-hover:animate-bounce">${z.icon}</span>
+                </div>
+                <h3 class="font-extrabold text-lg leading-tight mb-1">${z.area}</h3>
+                <p class="text-xs text-white/90 font-bold mb-3">${z.name}</p>
+                <p class="text-[11px] text-white/80 leading-relaxed font-medium">${z.desc}</p>
+              </div>
+              <div class="mt-4 bg-white/20 rounded-xl p-2 text-center text-xs font-black hover:bg-white/30 transition-colors">
+                Mulai ➡️
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    let activeZoneGlobal = 1;
+    function selectZone(id) {
+      activeZoneGlobal = id;
+      navigateTo('materi');
+    }
+
+    // ==========================================
+    // --- PAGE 5: MATERI INTERAKTIF ZONASI ---
+    // ==========================================
+    let materiState = {
+      simulationState: 'normal',
+      interactedObjects: {}
+    };
+
+    function renderMateri(zoneId) {
+      activeZoneGlobal = zoneId;
+      const tabs = document.getElementById('materi-tab-selector');
+      tabs.innerHTML = '';
+      [1, 2, 3, 4, 5].forEach(z => {
+        const isActive = activeZoneGlobal === z;
+        tabs.innerHTML += `
+          <button 
+            onclick="renderMateri(${z})"
+            class="px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${isActive ? 'bg-green-500 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300'}"
+          >
+            Zona {z}
+          </button>
+        `;
+      });
+
+      const content = document.getElementById('materi-content-area');
+      content.innerHTML = '';
+
+      if (zoneId === 1) {
+        content.innerHTML = `
+          <div class="space-y-6 text-left animate-fade-in">
+            <div class="bg-sky-100 dark:bg-sky-950/40 border-4 border-sky-400 p-6 rounded-3xl relative overflow-hidden">
+              <span class="text-4xl absolute right-4 top-4">🌎</span>
+              <h3 class="text-2xl font-black text-sky-800 dark:text-sky-300 mb-2">Zona 1: Mengenal Lingkungan</h3>
+              <p class="text-slate-700 dark:text-slate-300 font-medium text-base sm:text-lg leading-relaxed max-w-3xl">
+                "Lingkungan adalah segala sesuatu yang berada di sekitar makhluk hidup dan memengaruhi kehidupannya."
+              </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-3xl p-6 text-center">
+                <span class="text-6xl animate-bounce block mb-4">🌳🐕☀️</span>
+                <p class="text-slate-600 dark:text-slate-300 font-semibold mb-4">Lingkungan menyokong seluruh interaksi di bumi agar tetap lestari.</p>
+                <button onclick="playTTS('Lingkungan menyokong seluruh interaksi di bumi agar tetap lestari')" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-extrabold py-2 px-6 rounded-xl border-b-4 border-amber-600">
+                  🔊 Putar Suara
+                </button>
+              </div>
+              <div class="bg-blue-50 dark:bg-slate-800 border-2 border-blue-200 dark:border-slate-700 p-6 rounded-3xl">
+                <h4 class="font-extrabold text-blue-900 dark:text-blue-400 mb-2">🌱 Mengapa Harus Dijaga?</h4>
+                <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
+                  Ekosistem yang tidak dijaga akan membuat ketidakseimbangan, mengakibatkan punahnya keanekaragaman flora dan fauna bumi.
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (zoneId === 2) {
+        content.innerHTML = `
+          <div class="space-y-6 text-left">
+            <div class="bg-green-100 dark:bg-green-950/40 border-4 border-green-400 p-6 rounded-3xl relative overflow-hidden">
+              <span class="text-4xl absolute right-4 top-4">🌱</span>
+              <h3 class="text-2xl font-black text-green-800 dark:text-green-300 mb-2">Zona 2: Komponen Biotik</h3>
+              <p class="text-slate-700 dark:text-slate-300 font-medium text-base leading-relaxed">
+                "Komponen biotik adalah semua makhluk hidup yang berada di lingkungan sekitar kita."
+              </p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="biotik-elements"></div>
+          </div>
+        `;
+        renderBiotikItems();
+      } else if (zoneId === 3) {
+        content.innerHTML = `
+          <div class="space-y-6 text-left">
+            <div class="bg-amber-100 dark:bg-amber-950/40 border-4 border-amber-400 p-6 rounded-3xl relative overflow-hidden">
+              <span class="text-4xl absolute right-4 top-4">☀️</span>
+              <h3 class="text-2xl font-black text-amber-800 dark:text-amber-300 mb-2">Zona 3: Komponen Abiotik</h3>
+              <p class="text-slate-700 dark:text-slate-300 font-medium text-base leading-relaxed">
+                "Komponen abiotik adalah semua benda tak hidup yang sangat vital bagi kelangsungan ekosistem."
+              </p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="abiotik-elements"></div>
+          </div>
+        `;
+        renderAbiotikItems();
+      } else if (zoneId === 4) {
+        content.innerHTML = `
+          <div class="space-y-6 text-left">
+            <div class="bg-teal-100 dark:bg-teal-950/40 border-4 border-teal-400 p-6 rounded-3xl relative overflow-hidden">
+              <span class="text-4xl absolute right-4 top-4">🔄</span>
+              <h3 class="text-2xl font-black text-teal-800 dark:text-teal-300 mb-2">Zona 4: Hubungan Timbal Balik</h3>
+              <p class="text-slate-700 dark:text-slate-300 font-medium text-base leading-relaxed">
+                "Tumbuhan memerlukan air dan cahaya, sementara hewan memerlukan tumbuhan sebagai makanannya."
+              </p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-3xl p-6">
+              <h4 class="font-extrabold text-slate-800 dark:text-white mb-4 text-center">🎛️ Simulator Ekosistem: Efek Tumbuhan Berkurang</h4>
+              <div class="flex justify-center gap-4 mb-6">
+                <button id="sim-btn-normal" onclick="setSimulator('normal')" class="px-4 py-2 rounded-xl text-xs font-black bg-green-500 text-white">
+                  🌳 Tumbuhan Cukup
+                </button>
+                <button id="sim-btn-kering" onclick="setSimulator('kering')" class="px-4 py-2 rounded-xl text-xs font-black bg-white border border-slate-300">
+                  ⚠️ Kurangi Tumbuhan
+                </button>
+              </div>
+              <div id="sim-display" class="bg-sky-100 dark:bg-sky-950/40 rounded-2xl p-6 border border-sky-300 dark:border-sky-800 flex flex-col sm:flex-row justify-around items-center gap-4"></div>
+            </div>
+          </div>
+        `;
+        setSimulator('normal');
+      } else if (zoneId === 5) {
+        content.innerHTML = `
+          <div class="space-y-6 text-left">
+            <div class="bg-emerald-100 dark:bg-emerald-950/40 border-4 border-emerald-400 p-6 rounded-3xl relative overflow-hidden">
+              <span class="text-4xl absolute right-4 top-4">🌱</span>
+              <h3 class="text-2xl font-black text-emerald-800 dark:text-emerald-300 mb-2">Zona 5: Menjaga Kelestarian Alam</h3>
+              <p class="text-slate-700 dark:text-slate-300 font-medium text-base leading-relaxed">
+                "Setiap langkah kecil membimbing bumi kita kembali asri dan seimbang."
+              </p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="kelestarian-elements"></div>
+          </div>
+        `;
+        renderKelestarianItems();
+      }
+    }
+
+    const biotikItems = [
+      { key: 'human', name: 'Manusia', icon: '👦', desc: 'Pemimpin pelestarian bumi.' },
+      { key: 'animal', name: 'Hewan', icon: '🐰', desc: 'Konsumen rantai makanan.' },
+      { key: 'plant', name: 'Tumbuhan', icon: '🌳', desc: 'Produsen utama oksigen.' },
+      { key: 'micro', name: 'Mikroorganisme', icon: '🦠', desc: 'Dekomposer handal.' }
+    ];
+
+    function renderBiotikItems() {
+      const parent = document.getElementById('biotik-elements');
+      parent.innerHTML = '';
+      biotikItems.forEach(item => {
+        const clicked = materiState.interactedObjects[item.key];
+        parent.innerHTML += `
+          <div 
+            onclick="interactMateriObject('${item.key}')"
+            class="p-6 rounded-2xl border-2 cursor-pointer text-center transition-all ${clicked ? 'bg-green-50 dark:bg-green-950/30 border-green-500 scale-102 shadow-md' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300'}"
+          >
+            <span class="text-5xl block mb-2">${item.icon}</span>
+            <h4 class="font-extrabold text-slate-800 dark:text-white">${item.name}</h4>
+            <p class="text-[11px] text-green-800 dark:text-green-300 mt-2 font-bold leading-relaxed ${clicked ? '' : 'hidden'}">${item.desc}</p>
+            <span class="text-[10px] text-slate-400 block mt-2 font-bold ${clicked ? 'hidden' : ''}">Klik Detail</span>
+          </div>
+        `;
+      });
+    }
+
+    const abiotikItems = [
+      { key: 'air', name: 'Air', icon: '💧', effect: 'Penyegar kehidupan bumi.' },
+      { key: 'tanah', name: 'Tanah', icon: '🟫', effect: 'Fondasi hara & akar.' },
+      { key: 'udara', name: 'Udara', icon: '💨', effect: 'Oksigen pernapasan.' },
+      { key: 'cahaya', name: 'Matahari', icon: '☀️', effect: 'Energi utama fotosintesis.' },
+      { key: 'batu', name: 'Batu', icon: '🪨', effect: 'Fondasi ekosistem.' }
+    ];
+
+    function renderAbiotikItems() {
+      const parent = document.getElementById('abiotik-elements');
+      parent.innerHTML = '';
+      abiotikItems.forEach(item => {
+        const clicked = materiState.interactedObjects[item.key];
+        parent.innerHTML += `
+          <div 
+            onclick="interactMateriObject('${item.key}')"
+            class="p-4 rounded-2xl border-2 cursor-pointer text-center transition-all ${clicked ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-500 scale-102 shadow-md' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300'}"
+          >
+            <span class="text-4xl block mb-2 ${clicked ? 'animate-bounce' : ''}">${item.icon}</span>
+            <h4 class="font-extrabold text-slate-800 dark:text-white text-sm">${item.name}</h4>
+            <p class="text-[10px] text-amber-800 dark:text-amber-300 mt-2 font-extrabold ${clicked ? '' : 'hidden'}">${item.effect}</p>
+            <span class="text-[9px] text-slate-400 block mt-2 font-bold ${clicked ? 'hidden' : ''}">Sentuh Energinya</span>
+          </div>
+        `;
+      });
+    }
+
+    function interactMateriObject(key) {
+      playSound('click');
+      materiState.interactedObjects[key] = !materiState.interactedObjects[key];
+      addXp(5);
+      if (activeZoneGlobal === 2) renderBiotikItems();
+      if (activeZoneGlobal === 3) renderAbiotikItems();
+    }
+
+    function setSimulator(mode) {
+      materiState.simulationState = mode;
+      const btnNormal = document.getElementById('sim-btn-normal');
+      const btnKering = document.getElementById('sim-btn-kering');
+      const display = document.getElementById('sim-display');
+
+      if (mode === 'normal') {
+        playSound('click');
+        btnNormal.className = "px-4 py-2 rounded-xl text-xs font-black bg-green-500 text-white shadow-md";
+        btnKering.className = "px-4 py-2 rounded-xl text-xs font-black bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600";
+        display.innerHTML = `
+          <div class="text-center">
+            <span class="text-5xl block animate-bounce">🌳🌳</span>
+            <span class="text-xs font-bold text-green-700 dark:text-green-300">Tumbuhan Melimpah</span>
+          </div>
+          <div class="text-2xl text-slate-400">➡️</div>
+          <div class="text-center">
+            <span class="text-5xl block">🐇🐆</span>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Hewan Sehat & Kenyang</span>
+          </div>
+          <div class="text-2xl text-slate-400">➡️</div>
+          <div class="text-center">
+            <span class="text-5xl block">🌍</span>
+            <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Ekosistem Seimbang!</span>
+          </div>
+        `;
+      } else {
+        playSound('wrong');
+        btnNormal.className = "px-4 py-2 rounded-xl text-xs font-black bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600";
+        btnKering.className = "px-4 py-2 rounded-xl text-xs font-black bg-amber-600 text-white animate-pulse shadow-md";
+        display.innerHTML = `
+          <div class="text-center">
+            <span class="text-5xl block opacity-30">🪓🏜️</span>
+            <span class="text-xs font-bold text-red-700 dark:text-red-400">Hutan Gundul</span>
+          </div>
+          <div class="text-2xl text-slate-400">➡️</div>
+          <div class="text-center">
+            <span class="text-5xl block">😢💀</span>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Hewan Kelaparan</span>
+          </div>
+          <div class="text-2xl text-slate-400">➡️</div>
+          <div class="text-center">
+            <span class="text-5xl block">🌋🚨</span>
+            <span class="text-xs font-bold text-red-700 dark:text-red-400">Ekosistem Rusak!</span>
+          </div>
+        `;
+      }
+    }
+
+    const kelestarianItems = [
+      { key: 'tree', title: 'Menanam Pohon', desc: 'Menyerap karbon bumi.', icon: '🌳', xp: 20 },
+      { key: 'water', title: 'Menghemat Air', desc: 'Mencegah kekeringan air bersih.', icon: '🚰', xp: 15 },
+      { key: 'recycle', title: 'Daur Ulang', desc: 'Mengurangi beban sampah.', icon: '♻️', xp: 25 }
+    ];
+
+    function renderKelestarianItems() {
+      const parent = document.getElementById('kelestarian-elements');
+      parent.innerHTML = '';
+      kelestarianItems.forEach(item => {
+        const active = materiState.interactedObjects[item.key];
+        parent.innerHTML += `
+          <div 
+            onclick="interactKelestarian('${item.key}', ${item.xp})"
+            class="p-6 rounded-3xl border-2 text-center transition-all cursor-pointer ${active ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500 scale-102' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300'}"
+          >
+            <span class="text-5xl block mb-2">${item.icon}</span>
+            <h4 class="font-extrabold text-slate-800 dark:text-white">${item.title}</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">${item.desc}</p>
+            ${active ? 
+              `<span class="bg-emerald-500 text-white font-extrabold text-xs px-3 py-1 rounded-full animate-bounce inline-block">Misi Sukses! +${item.xp} XP</span>` : 
+              `<span class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-black text-xs px-3 py-1 rounded-full border border-slate-300 dark:border-slate-600 inline-block">Lakukan Aksi</span>`
+            }
+          </div>
+        `;
+      });
+    }
+
+    function interactKelestarian(key, xp) {
+      if (!materiState.interactedObjects[key]) {
+        playSound('correct');
+        materiState.interactedObjects[key] = true;
+        addXp(xp);
+        renderKelestarianItems();
+      }
+    }
+
+    // ==========================================
+    // --- PAGE 6: LABORATORIUM EKSPLORASI ---
+    // ==========================================
+    let labState = {
+      currentExpItemIdx: 0,
+      exp1Success: null,
+      exp1Done: false,
+      placedElements: []
+    };
+
+    const expItems = [
+      { name: "Kupu-kupu", category: "Biotik", icon: "🦋" },
+      { name: "Air Sungai", category: "Abiotik", icon: "💧" },
+      { name: "Batu Kali", category: "Abiotik", icon: "🪨" },
+      { name: "Pohon Kelapa", category: "Biotik", icon: "🌴" },
+      { name: "Cacing Tanah", category: "Biotik", icon: "🪱" },
+      { name: "Udara Bersih", category: "Abiotik", icon: "💨" }
+    ];
+
+    const ecosystemItems = [
+      { name: "Tanah Subur", icon: "🟫", role: "Tanah" },
+      { name: "Air Jernih", icon: "💧", role: "Air" },
+      { name: "Sinar Mentari", icon: "☀️", role: "Energi" },
+      { name: "Rumput Hijau", icon: "🌱", role: "Produsen" },
+      { name: "Kelinci Lucu", icon: "🐇", role: "Konsumen" }
+    ];
+
+    function initLab() {
+      renderExp1();
+      renderEcosystem();
+    }
+
+    function renderExp1() {
+      const container = document.getElementById('exp1-playground');
+      if (labState.exp1Done) {
+        container.innerHTML = `
+          <div class="bg-green-50 dark:bg-green-950/20 rounded-2xl p-6 border border-green-200 dark:border-green-800 text-center animate-fade-in">
+            <span class="text-5xl block mb-2">👑</span>
+            <span class="font-black text-green-800 dark:text-green-300 text-lg">Misi Klasifikasi Selesai!</span>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Anda mengidentifikasi semua komponen dengan tepat.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const item = expItems[labState.currentExpItemIdx];
+      let feedback = '';
+      if (labState.exp1Success === true) {
+        feedback = `<div class="mt-4 text-emerald-600 dark:text-emerald-400 font-extrabold text-sm animate-pulse">🎉 Benar sekali! Hebat!</div>`;
+      } else if (labState.exp1Success === false) {
+        feedback = `<div class="mt-4 text-rose-600 dark:text-rose-400 font-extrabold text-sm animate-pulse">❌ Kurang tepat, coba lagi ya!</div>`;
+      }
+
+      container.innerHTML = `
+        <span class="text-6xl block mb-2 animate-bounce">${item.icon}</span>
+        <span class="font-black text-lg text-slate-800 dark:text-white">${item.name}</span>
+
+        <div class="flex gap-4 justify-center mt-6">
+          <button onclick="classifyExpItem('Biotik')" class="bg-green-500 hover:bg-green-600 text-white font-extrabold py-2 px-6 rounded-xl border-b-4 border-green-700">
+            Biotik (Hidup)
+          </button>
+          <button onclick="classifyExpItem('Abiotik')" class="bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-2 px-6 rounded-xl border-b-4 border-amber-700">
+            Abiotik (Mati)
+          </button>
+        </div>
+        ${feedback}
+      `;
+    }
+
+    function classifyExpItem(answer) {
+      const currentItem = expItems[labState.currentExpItemIdx];
+      if (currentItem.category === answer) {
+        playSound('correct');
+        labState.exp1Success = true;
+        addXp(10);
+      } else {
+        playSound('wrong');
+        labState.exp1Success = false;
+      }
+      renderExp1();
+
+      setTimeout(() => {
+        labState.exp1Success = null;
+        if (labState.currentExpItemIdx < expItems.length - 1) {
+          labState.currentExpItemIdx++;
+        } else {
+          labState.exp1Done = true;
+          addBadge("🧪 Ahli Klasifikasi Lab");
+        }
+        renderExp1();
+      }, 1500);
+    }
+
+    function renderEcosystem() {
+      const canvas = document.getElementById('ecosystem-canvas');
+      canvas.innerHTML = '';
+
+      if (labState.placedElements.length === 0) {
+        canvas.innerHTML = `<span class="text-xs font-bold text-sky-800 dark:text-sky-300">Ecosystem kosong. Tambahkan komponen!</span>`;
+      } else {
+        labState.placedElements.forEach(el => {
+          canvas.innerHTML += `
+            <div class="bg-white/80 dark:bg-slate-800 border border-white dark:border-slate-700 p-2 rounded-xl flex flex-col items-center shadow-md animate-bounce">
+              <span class="text-3xl">${el.icon}</span>
+              <span class="text-[10px] font-extrabold text-slate-700 dark:text-slate-300">${el.name}</span>
+            </div>
+          `;
+        });
+      }
+
+      const isBalanced = labState.placedElements.length === ecosystemItems.length;
+      if (isBalanced) {
+        canvas.innerHTML += `
+          <div class="absolute inset-0 bg-emerald-500/90 flex flex-col items-center justify-center rounded-2xl text-white p-4 text-center">
+            <span class="text-4xl animate-bounce">🌻🐇🌳</span>
+            <span class="font-extrabold text-sm">EKOSISTEM SANGAT SEIMBANG!</span>
+            <p class="text-[10px] text-white/90 mt-1">Sinar matahari, air, tanah, tumbuhan, dan hewan bekerja sama dengan harmoni.</p>
+          </div>
+        `;
+        document.getElementById('ecosystem-reset-container').classList.remove('hidden');
+      } else {
+        document.getElementById('ecosystem-reset-container').classList.add('hidden');
+      }
+
+      const selector = document.getElementById('ecosystem-elements-selector');
+      selector.innerHTML = '';
+      if (!isBalanced) {
+        ecosystemItems.forEach((item, idx) => {
+          const isPlaced = labState.placedElements.some(e => e.role === item.role);
+          selector.innerHTML += `
+            <button
+              ${isPlaced ? 'disabled' : ''}
+              onclick="placeEcosystemElement(${idx})"
+              class="px-3 py-1.5 rounded-xl text-xs font-extrabold border-2 transition-all ${isPlaced ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-not-allowed' : 'bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300'}"
+            >
+              ${item.icon} ${item.name}
+            </button>
+          `;
+        });
+      }
+    }
+
+    function placeEcosystemElement(idx) {
+      const item = ecosystemItems[idx];
+      playSound('click');
+      if (!labState.placedElements.some(e => e.role === item.role)) {
+        labState.placedElements.push(item);
+        addXp(10);
+        if (labState.placedElements.length === ecosystemItems.length) {
+          addBadge("🧬 Master Ekosistem");
+        }
+      }
+      renderEcosystem();
+    }
+
+    function resetEcosystem() {
+      playSound('click');
+      labState.placedElements = [];
+      renderEcosystem();
+    }
+
+    // ==========================================
+    // --- PAGE 7: TANTANGAN (QUIZ) ---
+    // ==========================================
+    let quizState = {
+      currentIdx: 0,
+      selectedOpt: null,
+      isAnswered: false,
+      score: 0,
+      timer: 15,
+      intervalId: null
+    };
+
+    const questionsList = [
+      {
+        q: "Apakah yang dimaksud dengan lingkungan hidup?",
+        opts: [
+          "A. Segala sesuatu di sekitar makhluk hidup yang memengaruhi kehidupannya.",
+          "B. Hanya tumbuhan dan hewan peliharaan di rumah.",
+          "C. Perkotaan besar yang dipenuhi oleh gedung pencakar langit.",
+          "D. Angkasa luar yang hampa udara."
+        ],
+        ans: 0,
+        exp: "Lingkungan hidup meliputi semua komponen biotik dan abiotik di sekeliling kita yang menyokong kelangsungan hidup."
+      },
+      {
+        q: "Di bawah ini, manakah yang tergolong dalam komponen biotik?",
+        opts: [
+          "A. Batu, kerikil, dan pasir.",
+          "B. Manusia, kucing, dan pohon mangga.",
+          "C. Air, cahaya matahari, dan udara.",
+          "D. Plastik, besi, dan karet."
+        ],
+        ans: 1,
+        exp: "Biotik merujuk pada segala jenis benda hidup, termasuk manusia, hewan, tumbuhan, dan mikroba."
+      },
+      {
+        q: "Komponen abiotik yang berperan penting sebagai sumber energi fotosintesis adalah...",
+        opts: [
+          "A. Oksigen karbon",
+          "B. Pupuk buatan",
+          "C. Air hujan",
+          "D. Cahaya matahari"
+        ],
+        ans: 3,
+        exp: "Cahaya matahari diserap oleh klorofil tumbuhan untuk mereaksikan air dan karbon dioksida menjadi glukosa."
+      },
+      {
+        q: "Apa akibatnya jika semua produsen (tumbuhan) di suatu ekosistem musnah?",
+        opts: [
+          "A. Hewan herbivora akan tumbuh lebih cepat.",
+          "B. Ekosistem akan menjadi gersang dan rantai makanan terputus.",
+          "C. Komponen abiotik akan mengambil alih peran tumbuhan.",
+          "D. Hewan karnivora akan menggantikan peran tumbuhan."
+        ],
+        ans: 1,
+        exp: "Tumbuhan adalah produsen primer. Jika tumbuhan punah, hewan pemakan tumbuhan kelaparan, dan berimbas pada predator di atasnya."
+      },
+      {
+        q: "Mengapa kita dilarang membuang sampah sembarangan ke dalam aliran sungai?",
+        opts: [
+          "A. Agar volume air sungai menyusut.",
+          "B. Karena dapat mencemari air dan meracuni hewan air.",
+          "C. Supaya air sungai meluap dengan bersih.",
+          "D. Agar nelayan mudah mencari ikan mati."
+        ],
+        ans: 1,
+        exp: "Sampah anorganik mencemari kualitas air sungai dan mengancam biota air seperti ikan dan udang."
+      },
+      {
+        q: "Aktivitas manakah yang membantu menekan pemanasan global di bumi?",
+        opts: [
+          "A. Menggunakan kendaraan bermotor tanpa batas.",
+          "B. Melakukan tebang liar di lereng gunung.",
+          "C. Menanam pohon (reboisasi) secara massal.",
+          "D. Membakar sampah plastik di pekarangan."
+        ],
+        ans: 2,
+        exp: "Pohon menyerap CO2 penyebab efek rumah kaca, sehingga reboisasi sangat membantu mendinginkan bumi."
+      },
+      {
+        q: "Bakteri pembusuk dan jamur dalam ekosistem bertugas sebagai...",
+        opts: [
+          "A. Produsen tangguh",
+          "B. Konsumen puncak",
+          "C. Pengurai (dekomposer)",
+          "D. Komponen abiotik"
+        ],
+        ans: 2,
+        exp: "Dekomposer menguraikan sisa organisme mati menjadi nutrisi mineral yang kemudian menyuburkan tanah."
+      },
+      {
+        q: "Interaksi antara lebah madu dengan bunga merupakan contoh hubungan...",
+        opts: [
+          "A. Saling menguntungkan (mutualisme)",
+          "B. Saling merugikan (parasitisme)",
+          "C. Satu untung satu tidak rugi (komensalisme)",
+          "D. Persaingan ketat (kompetisi)"
+        ],
+        ans: 0,
+        exp: "Lebah mendapat nektar madu, sementara bunga terbantu proses penyerbukannya."
+      },
+      {
+        q: "Berikut ini cara menghemat air bersih yang bijaksana di rumah adalah...",
+        opts: [
+          "A. Membiarkan keran air mengalir sepanjang malam.",
+          "B. Mematikan keran air saat sedang menggosok gigi.",
+          "C. Menyiram tanaman menggunakan air minum galon baru.",
+          "D. Mencuci sepeda setiap jam sekali."
+        ],
+        ans: 1,
+        exp: "Mematikan aliran air saat menyikat gigi dapat menghemat ratusan liter air tawar setiap minggunya."
+      },
+      {
+        q: "Sikap utama yang harus dimiliki oleh seorang Penjaga Bumi sejati adalah...",
+        opts: [
+          "A. Acuh tak acuh pada kebersihan lingkungan.",
+          "B. Membenci hewan liar yang dilindungi.",
+          "C. Peduli, hemat energi, dan rajin merawat alam.",
+          "D. Suka membeli barang plastik sekali pakai."
+        ],
+        ans: 2,
+        exp: "Peduli, hemat energi, dan merawat alam adalah sikap dasar cinta lingkungan hidup."
+      }
+    ];
+
+    function initTantangan() {
+      quizState.currentIdx = 0;
+      quizState.selectedOpt = null;
+      quizState.isAnswered = false;
+      quizState.score = 0;
+      quizState.timer = 15;
+      if (quizState.intervalId) clearInterval(quizState.intervalId);
+      renderQuizQuestion();
+      startQuizTimer();
+    }
+
+    function startQuizTimer() {
+      if (quizState.intervalId) clearInterval(quizState.intervalId);
+      quizState.intervalId = setInterval(() => {
+        if (!quizState.isAnswered) {
+          quizState.timer--;
+          const el = document.getElementById('quiz-timer');
+          el.innerText = `⏱️ ${quizState.timer} Detik`;
+          
+          if (quizState.timer <= 4) {
+            el.className = "px-4 py-1.5 rounded-full font-black text-xs bg-red-500 text-white animate-pulse";
+          } else {
+            el.className = "px-4 py-1.5 rounded-full font-black text-xs bg-amber-400 text-slate-900";
+          }
+
+          if (quizState.timer <= 0) {
+            handleQuizAnswer(null);
+          }
+        }
+      }, 1000);
+    }
+
+    function renderQuizQuestion() {
+      const q = questionsList[quizState.currentIdx];
+      document.getElementById('quiz-progress-text').innerText = `Soal ${quizState.currentIdx + 1} dari ${questionsList.length}`;
+      document.getElementById('quiz-question').innerText = q.q;
+
+      const optsContainer = document.getElementById('quiz-options-container');
+      optsContainer.innerHTML = '';
+
+      q.opts.forEach((opt, idx) => {
+        optsContainer.innerHTML += `
+          <button
+            id="quiz-opt-${idx}"
+            onclick="handleQuizAnswer(${idx})"
+            class="w-full text-left p-4 rounded-2xl border-2 border-b-4 font-bold text-sm sm:text-base transition-all bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:scale-101"
+          >
+            ${opt}
+          </button>
+        `;
+      });
+
+      document.getElementById('quiz-explanation-box').classList.add('hidden');
+      document.getElementById('quiz-btn-next').classList.add('hidden');
+    }
+
+    function handleQuizAnswer(optIdx) {
+      if (quizState.isAnswered) return;
+      quizState.isAnswered = true;
+      quizState.selectedOpt = optIdx;
+      clearInterval(quizState.intervalId);
+
+      const q = questionsList[quizState.currentIdx];
+      
+      if (optIdx === q.ans) {
+        playSound('correct');
+        quizState.score++;
+      } else {
+        playSound('wrong');
+      }
+
+      q.opts.forEach((_, idx) => {
+        const btn = document.getElementById(`quiz-opt-${idx}`);
+        btn.disabled = true;
+        if (idx === q.ans) {
+          btn.className = "w-full text-left p-4 rounded-2xl border-2 border-b-4 font-bold text-sm sm:text-base transition-all bg-emerald-500 border-emerald-600 text-white";
+        } else if (idx === optIdx) {
+          btn.className = "w-full text-left p-4 rounded-2xl border-2 border-b-4 font-bold text-sm sm:text-base transition-all bg-rose-500 border-rose-600 text-white";
+        } else {
+          btn.className = "w-full text-left p-4 rounded-2xl border-2 border-b-4 font-bold text-sm sm:text-base transition-all bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 opacity-60";
+        }
+      });
+
+      document.getElementById('quiz-explanation-text').innerText = q.exp;
+      document.getElementById('quiz-explanation-box').classList.remove('hidden');
+
+      const nextBtn = document.getElementById('quiz-btn-next');
+      nextBtn.classList.remove('hidden');
+      if (quizState.currentIdx === questionsList.length - 1) {
+        nextBtn.innerText = "Selesaikan & Dapatkan Lencana 🏁";
+      } else {
+        nextBtn.innerText = "Soal Berikutnya ➡️";
+      }
+    }
+
+    let savedQuizScorePercent = 0;
+    function nextQuizQuestion() {
+      if (quizState.currentIdx < questionsList.length - 1) {
+        quizState.currentIdx++;
+        quizState.selectedOpt = null;
+        quizState.isAnswered = false;
+        quizState.timer = 15;
+        renderQuizQuestion();
+        startQuizTimer();
+      } else {
+        const scorePercent = Math.round((quizState.score / questionsList.length) * 100);
+        savedQuizScorePercent = scorePercent;
+        addXp(scorePercent * 2);
+        if (scorePercent >= 80) addBadge('🎯 Ahli Ekosistem');
+        navigateTo('game');
+      }
+    }
+
+    // ==========================================
+    // --- PAGE 8: GAME EDUKASI ---
+    // ==========================================
+    let game1State = {
+      organicItems: [],
+      inorganicItems: [],
+      trashScore: 0,
+      currentIdx: 0
+    };
+
+    let game2State = {
+      plantedTrees: [],
+      forestTimer: 15,
+      forestActive: false,
+      intervalId: null
+    };
+
+    let game3State = {
+      foundObjects: []
+    };
+
+    const trashList = [
+      { name: "Daun Kering", type: "organik", icon: "🍂" },
+      { name: "Botol Plastik", type: "anorganik", icon: "🍾" },
+      { name: "Kulit Pisang", type: "organik", icon: "🍌" },
+      { name: "Kaleng Bekas", type: "anorganik", icon: "🥫" },
+      { name: "Sisa Makanan", type: "organik", icon: "🍎" },
+      { name: "Kantong Kresek", type: "anorganik", icon: "🛍️" }
+    ];
+
+    const hiddenObjectsList = [
+      { key: "burung", name: "Burung Elang", icon: "🦅", pos: { top: "15%", left: "45%" } },
+      { key: "kelinci", name: "Kelinci Putih", icon: "🐇", pos: { top: "70%", left: "15%" } },
+      { key: "kupu", name: "Kupu-kupu Kuning", icon: "🦋", pos: { top: "35%", left: "80%" } },
+      { key: "pohon", name: "Tunas Pohon Hijau", icon: "🌱", pos: { top: "80%", left: "85%" } }
+    ];
+
+    function switchGame(gameNum) {
+      playSound('click');
+      const t1 = document.getElementById('tab-game1');
+      const t2 = document.getElementById('tab-game2');
+      const t3 = document.getElementById('tab-game3');
+
+      t1.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300";
+      t2.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300";
+      t3.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-300";
+
+      const playArea = document.getElementById('game-playground-container');
+
+      if (gameNum === 1) {
+        t1.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-indigo-500 text-white shadow-md";
+        renderGame1(playArea);
+      } else if (gameNum === 2) {
+        t2.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-emerald-500 text-white shadow-md";
+        renderGame2(playArea);
+      } else {
+        t3.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all bg-amber-500 text-white shadow-md";
+        renderGame3(playArea);
+      }
+    }
+
+    function renderGame1(parent) {
+      let currentTrashHtml = '';
+      if (game1State.currentIdx < trashList.length) {
+        const item = trashList[game1State.currentIdx];
+        currentTrashHtml = `
+          <div>
+            <span class="text-6xl block animate-bounce mb-2">${item.icon}</span>
+            <span class="font-extrabold text-lg text-slate-800 dark:text-white">${item.name}</span>
+          </div>
+        `;
+      } else {
+        currentTrashHtml = `
+          <div>
+            <span class="text-5xl block">🎉</span>
+            <span class="font-black text-indigo-900 dark:text-indigo-300 block mt-2">Semua Terpilah!</span>
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Skor: ${game1State.trashScore} / ${trashList.length}</span>
+          </div>
+        `;
+      }
+
+      parent.innerHTML = `
+        <div class="bg-indigo-50 dark:bg-slate-800 rounded-3xl p-6 border-2 border-indigo-200 dark:border-slate-700 animate-fade-in text-left">
+          <h3 class="font-extrabold text-xl text-indigo-900 dark:text-indigo-300 mb-2">Game 1: Pilah Sampah</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">Pilah sampah yang jatuh di bawah ini ke dalam kotak sampah yang tepat!</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+            <div class="bg-green-100 dark:bg-green-950/40 border-4 border-green-500 rounded-3xl p-4 text-center min-h-[150px] flex flex-col justify-between">
+              <span class="text-4xl block">🟢</span>
+              <span class="font-black text-green-800 dark:text-green-300">KOTAK ORGANIK</span>
+              <div class="flex flex-wrap gap-1 justify-center mt-2 min-h-[30px]" id="org-bin-items"></div>
+              <button id="btn-sort-org" onclick="sortTrash('organik')" class="mt-4 bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-extrabold py-2 px-4 rounded-xl text-xs">
+                Pilah Organik
+              </button>
+            </div>
+
+            <div class="text-center p-6 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-300 dark:border-slate-700">
+              ${currentTrashHtml}
+            </div>
+
+            <div class="bg-amber-100 dark:bg-amber-950/40 border-4 border-amber-500 rounded-3xl p-4 text-center min-h-[150px] flex flex-col justify-between">
+              <span class="text-4xl block">🟡</span>
+              <span class="font-black text-amber-800 dark:text-amber-300">KOTAK ANORGANIK</span>
+              <div class="flex flex-wrap gap-1 justify-center mt-2 min-h-[30px]" id="inorg-bin-items"></div>
+              <button id="btn-sort-inorg" onclick="sortTrash('anorganik')" class="mt-4 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-extrabold py-2 px-4 rounded-xl text-xs">
+                Pilah Anorganik
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const orgBin = document.getElementById('org-bin-items');
+      const inorgBin = document.getElementById('inorg-bin-items');
+      game1State.organicItems.forEach(el => orgBin.innerHTML += `<span class="text-2xl" title="${el.name}">${el.icon}</span>`);
+      game1State.inorganicItems.forEach(el => inorgBin.innerHTML += `<span class="text-2xl" title="${el.name}">${el.icon}</span>`);
+
+      if (game1State.currentIdx >= trashList.length) {
+        document.getElementById('btn-sort-org').disabled = true;
+        document.getElementById('btn-sort-inorg').disabled = true;
+      }
+    }
+
+    function sortTrash(type) {
+      if (game1State.currentIdx >= trashList.length) return;
+      const item = trashList[game1State.currentIdx];
+
+      if (item.type === type) {
+        playSound('correct');
+        game1State.trashScore++;
+        addXp(15);
+        if (type === 'organik') game1State.organicItems.push(item);
+        else game1State.inorganicItems.push(item);
+      } else {
+        playSound('wrong');
+      }
+
+      game1State.currentIdx++;
+      if (game1State.currentIdx === trashList.length) {
+        addBadge("♻️ Pahlawan Daur Ulang");
+      }
+
+      renderGame1(document.getElementById('game-playground-container'));
+    }
+
+    // --- GAME 2: SELAMATKAN HUTAN ---
+    function renderGame2(parent) {
+      if (game2State.intervalId) clearInterval(game2State.intervalId);
+
+      parent.innerHTML = `
+        <div class="bg-emerald-50 dark:bg-slate-800 rounded-3xl p-6 border-2 border-emerald-200 dark:border-slate-700 animate-fade-in text-left">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="font-extrabold text-xl text-emerald-900 dark:text-emerald-300">Game 2: Tanam Pohon</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Ketuk area gundul di bawah untuk menanam pohon dewasa sebanyak mungkin!</p>
+            </div>
+            <div class="bg-white dark:bg-slate-950 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
+              <span class="text-[10px] font-bold text-slate-400 block uppercase">Sisa Waktu</span>
+              <span id="game2-timer" class="font-black text-lg text-emerald-700 dark:text-emerald-400">${game2State.forestTimer} Detik</span>
+            </div>
+          </div>
+
+          <div id="game2-interaction-container"></div>
+
+          <div class="mt-4 flex justify-between items-center bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+            <span class="font-extrabold text-slate-700 dark:text-slate-300 text-xs sm:text-sm">Pohon Tertanam: <span id="game2-count" class="text-emerald-600 dark:text-emerald-400 font-black text-base">0</span></span>
+            <div id="game2-reset-btn-placeholder"></div>
+          </div>
+        </div>
+      `;
+
+      updateGame2ControlBox();
+    }
+
+    function updateGame2ControlBox() {
+      const box = document.getElementById('game2-interaction-container');
+      const resetPlaceholder = document.getElementById('game2-reset-btn-placeholder');
+
+      if (!game2State.forestActive && game2State.plantedTrees.length === 0) {
+        box.innerHTML = `
+          <div class="text-center py-8">
+            <button onclick="startGame2()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-lg py-3 px-8 rounded-2xl border-b-4 border-emerald-700 active:border-b-0">
+              Mulai Menanam Sekarang 🌱
+            </button>
+          </div>
+        `;
+        resetPlaceholder.innerHTML = '';
+      } else {
+        box.innerHTML = `
+          <div 
+            onclick="plantForestTree(event)"
+            id="forest-field"
+            class="bg-amber-200 dark:bg-amber-950/30 rounded-3xl h-[280px] border-4 border-amber-300 dark:border-amber-900 relative overflow-hidden cursor-crosshair shadow-inner"
+          ></div>
+        `;
+        renderPlantedTreesOnField();
+
+        if (!game2State.forestActive && game2State.plantedTrees.length > 0) {
+          resetPlaceholder.innerHTML = `
+            <button onclick="relaunchGame2()" class="bg-slate-400 hover:bg-slate-500 text-white font-extrabold py-1.5 px-4 rounded-lg text-xs">
+              Ulangi Game 🔄
+            </button>
+          `;
+        } else {
+          resetPlaceholder.innerHTML = '';
+        }
+      }
+      document.getElementById('game2-count').innerText = game2State.plantedTrees.length;
+    }
+
+    function startGame2() {
+      playSound('click');
+      game2State.forestActive = true;
+      game2State.forestTimer = 15;
+      game2State.plantedTrees = [];
+      updateGame2ControlBox();
+
+      game2State.intervalId = setInterval(() => {
+        game2State.forestTimer--;
+        const timerEl = document.getElementById('game2-timer');
+        if (timerEl) timerEl.innerText = `${game2State.forestTimer} Detik`;
+
+        if (game2State.forestTimer <= 0) {
+          clearInterval(game2State.intervalId);
+          game2State.forestActive = false;
+          addBadge("🌳 Penyelamat Paru Bumi");
+          addXp(game2State.plantedTrees.length * 5);
+          updateGame2ControlBox();
+        }
+      }, 1000);
+    }
+
+    function relaunchGame2() {
+      startGame2();
+    }
+
+    function plantForestTree(e) {
+      if (!game2State.forestActive) return;
+      playSound('click');
+      const field = document.getElementById('forest-field');
+      const rect = field.getBoundingClientRect();
+      const x = e.clientX - rect.left - 20;
+      const y = e.clientY - rect.top - 20;
+
+      game2State.plantedTrees.push({ x, y });
+      document.getElementById('game2-count').innerText = game2State.plantedTrees.length;
+
+      renderPlantedTreesOnField();
+    }
+
+    function renderPlantedTreesOnField() {
+      const field = document.getElementById('forest-field');
+      if (!field) return;
+      field.innerHTML = '';
+      
+      if (game2State.plantedTrees.length === 0) {
+        field.innerHTML = `<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="text-amber-800 dark:text-amber-400 font-extrabold text-sm text-center">Ketuk di area mana saja untuk menanam pohon!</span></div>`;
+      } else {
+        game2State.plantedTrees.forEach(p => {
+          field.innerHTML += `
+            <span class="absolute text-4xl animate-bounce" style="top: ${p.y}px; left: ${p.x}px;">🌳</span>
+          `;
+        });
+      }
+    }
+
+    // --- GAME 3: CARI MAKHLUK HIDUP ---
+    function renderGame3(parent) {
+      parent.innerHTML = `
+        <div class="bg-amber-50 dark:bg-slate-800 rounded-3xl p-6 border-2 border-amber-200 dark:border-slate-700 animate-fade-in text-left">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="font-extrabold text-xl text-amber-900 dark:text-amber-300">Game 3: Cari Makhluk Hidup</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Temukan 4 objek tersembunyi di dalam rimba belantara berikut!</p>
+            </div>
+            <div class="bg-white dark:bg-slate-950 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
+              <span class="text-[10px] font-bold text-slate-400 block uppercase">Ditemukan</span>
+              <span id="game3-found-text" class="font-black text-lg text-amber-700 dark:text-amber-400">0 / 4</span>
+            </div>
+          </div>
+
+          <div class="bg-gradient-to-b from-sky-300 via-green-300 to-emerald-400 dark:from-sky-950 dark:via-green-950 dark:to-emerald-900 rounded-3xl h-[280px] border-4 border-slate-200 dark:border-slate-800 relative overflow-hidden shadow-inner" id="h-forest-landscape">
+            <div class="absolute bottom-0 w-full h-1/3 bg-green-600 rounded-t-full opacity-60 pointer-events-none"></div>
+            <div class="absolute top-2 left-4 text-white text-xs font-black drop-shadow pointer-events-none">HUTAN EMBUN ISLAMAN</div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2" id="game3-checklists"></div>
+        </div>
+      `;
+
+      renderHiddenLandscape();
+    }
+
+    function renderHiddenLandscape() {
+      const landscape = document.getElementById('h-forest-landscape');
+      const checklist = document.getElementById('game3-checklists');
+      
+      document.getElementById('game3-found-text').innerText = `${game3State.foundObjects.length} / ${hiddenObjectsList.length}`;
+
+      landscape.querySelectorAll('.hidden-item-btn').forEach(btn => btn.remove());
+      const congratulationsDiv = landscape.querySelector('.victory-landscape-overlay');
+      if (congratulationsDiv) congratulationsDiv.remove();
+
+      hiddenObjectsList.forEach(obj => {
+        const isFound = game3State.foundObjects.includes(obj.key);
+        landscape.innerHTML += `
+          <button
+            onclick="findHiddenObject('${obj.key}')"
+            style="top: ${obj.pos.top}; left: ${obj.pos.left};"
+            class="hidden-item-btn absolute text-3xl p-2 rounded-full transition-all duration-300 hover:scale-125 ${isFound ? 'bg-emerald-500 text-white border-2 border-white scale-110 shadow-lg pointer-events-none' : 'opacity-80'}"
+          >
+            ${obj.icon}
+          </button>
+        `;
+      });
+
+      if (game3State.foundObjects.length === hiddenObjectsList.length) {
+        landscape.innerHTML += `
+          <div class="victory-landscape-overlay absolute inset-0 bg-emerald-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center animate-fade-in">
+            <span class="text-5xl animate-bounce">👑</span>
+            <h4 class="font-black text-white text-lg mt-2">Mata Elang Hebat!</h4>
+            <p class="text-xs text-slate-300">Anda berhasil menemukan semua flora dan fauna tersembunyi.</p>
+          </div>
+        `;
+      }
+
+      checklist.innerHTML = '';
+      hiddenObjectsList.forEach(obj => {
+        const isFound = game3State.foundObjects.includes(obj.key);
+        checklist.innerHTML += `
+          <div class="p-2.5 rounded-xl border text-center font-bold text-xs flex items-center justify-center gap-2 ${isFound ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500'}">
+            <span>${obj.icon}</span>
+            <span>${obj.name}</span>
+            ${isFound ? '✓' : ''}
+          </div>
+        `;
+      });
+    }
+
+    function findHiddenObject(key) {
+      if (!game3State.foundObjects.includes(key)) {
+        playSound('correct');
+        game3State.foundObjects.push(key);
+        addXp(20);
+        if (game3State.foundObjects.length === hiddenObjectsList.length) {
+          addBadge("🦋 Pengamat Rimba Jeli");
+        }
+        renderHiddenLandscape();
+      }
+    }
+
+    // ==========================================
+    // --- PAGE 9: PENUTUP ---
+    // ==========================================
+    function renderPenutup() {
+      document.getElementById('final-accuracy').innerText = `${savedQuizScorePercent}%`;
+      document.getElementById('final-xp').innerText = `${state.xp} XP`;
+      document.getElementById('final-badges-count').innerText = `${state.unlockedBadges.length} Badge`;
+
+      const badgesBox = document.getElementById('final-badges-container');
+      badgesBox.innerHTML = '';
+      state.unlockedBadges.forEach(badge => {
+        badgesBox.innerHTML += `
+          <span class="bg-amber-100 text-amber-800 border border-amber-300 font-extrabold text-xs px-3 py-1 rounded-full shadow-sm animate-pulse">
+            🎖️ ${badge}
+          </span>
+        `;
+      });
+
+      let title = "🌱 Calon Penjaga Bumi";
+      let desc = "Kamu sudah belajar hal berharga! Jangan menyerah dan ayo coba lagi agar skor belajarmu meningkat!";
+      let colorClass = "border-red-400 bg-red-50 text-red-800 dark:bg-red-950/20 dark:text-red-400";
+      let icon = "🌱";
+
+      if (savedQuizScorePercent >= 80) {
+        title = "🏆 Penjaga Bumi Hebat";
+        desc = "Luar biasa! Pengetahuan ekologimu sempurna. Kamu layak memimpin aksi pelestarian lingkungan hidup!";
+        colorClass = "border-yellow-400 bg-yellow-50 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400";
+        icon = "🏆";
+      } else if (savedQuizScorePercent >= 60) {
+        title = "⭐ Sahabat Alam";
+        desc = "Bagus sekali! Pemahamanmu mantap. Terus kembangkan kecintaanmu pada tanaman dan ekosistem!";
+        colorClass = "border-sky-400 bg-sky-50 text-sky-800 dark:bg-sky-950/20 dark:text-sky-400";
+        icon = "⭐";
+      }
+
+      document.getElementById('final-category-card').className = `p-6 rounded-2xl border-2 text-center ${colorClass}`;
+      document.getElementById('final-category-card').innerHTML = `
+        <span class="text-5xl block mb-2">${icon}</span>
+        <h4 class="font-extrabold text-xl">${title}</h4>
+        <p class="text-xs sm:text-sm font-semibold mt-1 leading-relaxed">${desc}</p>
+      `;
+    }
+
+    // ==========================================
+    // --- CONFETTI ANIMATION JS ENGINE ---
+    // ==========================================
+    let confettiAnimationFrameId = null;
+
+    function startConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      canvas.classList.remove('hidden');
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6'];
+      const particles = Array.from({ length: 150 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * canvas.height,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        tilt: Math.random() * 10 - 5,
+        tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+        tiltAngle: 0
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, index) => {
+          p.tiltAngle += p.tiltAngleIncremental;
+          p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+          p.tilt = Math.sin(p.tiltAngle - index / 3) * 15;
+
+          if (p.y > canvas.height) {
+            particles[index] = {
+              x: Math.random() * canvas.width,
+              y: -20,
+              r: p.r,
+              d: p.d,
+              color: p.color,
+              tilt: p.tilt,
+              tiltAngleIncremental: p.tiltAngleIncremental,
+              tiltAngle: p.tiltAngle
+            };
+          }
+
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+          ctx.stroke();
+        });
+
+        confettiAnimationFrameId = requestAnimationFrame(draw);
+      }
+
+      draw();
+    }
+
+    function stopConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      canvas.classList.add('hidden');
+      if (confettiAnimationFrameId) cancelAnimationFrame(confettiAnimationFrameId);
+    }
+  </script>
+</body>
+</html>
